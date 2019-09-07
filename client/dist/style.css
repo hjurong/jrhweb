@@ -1,4 +1,10 @@
-@import url(https://fonts.googleapis.com/css?family=Playfair+Display:700,900);@import url(https://fonts.googleapis.com/css?family=Nunito|Poppins:500|Open+Sans);/* stylelint-disable selector-list-comma-newline-after */
+@import url(https://fonts.googleapis.com/css?family=Playfair+Display:700,900);@import url(https://fonts.googleapis.com/css?family=Nunito|Poppins:500|Open+Sans);.map {
+  text-align: justify;
+  height: 350px;
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 20px; }
+/* stylelint-disable selector-list-comma-newline-after */
 .blog-header {
   line-height: 1;
   border-bottom: 1px solid #e5e5e5; }
