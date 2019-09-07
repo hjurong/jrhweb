@@ -7,6 +7,7 @@ import { App } from './components';
 
 import '../resources/scss/style.scss';
 import '../resources/scss/blog.scss';
+import '../resources/scss/map.scss';
 
 document.title = "Jurong's blog";
 
