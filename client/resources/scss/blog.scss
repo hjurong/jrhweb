@@ -125,3 +125,9 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0;
 }
 
+/*
+ * for mobile
+ */
+@media only screen and (max-width: 600px) {
+  div.blog-main h3 { font-size: 1.25rem; }
+} 

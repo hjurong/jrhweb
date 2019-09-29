@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 module.exports = {
   entry: [
@@ -36,7 +37,10 @@ module.exports = {
         test: /\.scss$/,
         use: ExtractTextPlugin.extract({
           fallback: 'style-loader',
-          use: ['css-loader', 'sass-loader'],
+          use: [
+            'css-loader', 
+            'sass-loader'
+          ],
         }),
       },
       {
@@ -61,6 +65,7 @@ module.exports = {
 
   plugins: [
     new ExtractTextPlugin({ filename: 'style.css' }),
+    new OptimizeCssAssetsPlugin(),
     new HtmlWebpackPlugin({
       template: './resources/index.html',
       filename: './index.html',
