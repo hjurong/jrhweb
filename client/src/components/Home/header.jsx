@@ -1,5 +1,5 @@
-import React from 'react';
-import { Map } from '../../components/Blog';
+import React from "react";
+import { Map } from "../../components/Blog";
 
 export class Header extends React.Component {
   render() {
@@ -8,14 +8,20 @@ export class Header extends React.Component {
         <header className="blog-header py-3">
           <div className="row flex-nowrap justify-content-between align-items-center">
             <div className="col-12 text-center">
-              <a className="blog-header-logo text-dark" href="/">The green light</a>
+              <a className="blog-header-logo text-dark" href="/">
+                The green light
+              </a>
             </div>
           </div>
         </header>
-        <div class="nav-scroller py-1 mb-2">
-          <nav class="nav d-flex">
-            <a class="p-2 text-muted" href="#">Tag 1</a>
-            <a class="p-2 text-muted" href="#">Tag 2</a>
+        <div className="nav-scroller py-1 mb-2">
+          <nav className="nav d-flex">
+            <a className="p-2 text-muted" href="#">
+              Tag 1
+            </a>
+            <a className="p-2 text-muted" href="#">
+              Tag 2
+            </a>
           </nav>
         </div>
         <Map />
@@ -23,4 +29,3 @@ export class Header extends React.Component {
     );
   }
 }
-
