@@ -1,0 +1,46 @@
+.blog-form {
+    margin-bottom: 4rem;
+}
+
+.post-editor-editor {
+    min-height: 250px;
+    border: 1px solid #dee2e6;
+    padding: 5px;
+    border-radius: 2px;
+    margin-bottom: 2rem;
+    line-height: 5px;
+}
+
+.post-editor-toolbar {
+    border: 1px solid #dee2e6;
+}
+
+.imgdelete {
+    padding: 5px;
+}
+
+.cropContainer {
+    text-align: center;
+}
+
+.rotateLeft {
+    padding: 5px;
+    margin-right: 10px;
+}
+
+.rotateRight {
+    padding: 5px;
+    margin-left: 10px;
+}
+
+.rotateLeft:hover, .rotateRight:hover, .imgdelete:hover {
+    cursor: pointer;
+}
+
+.form-btn-submit {
+    margin-right: 5px;
+}
+
+.form-btn-cancel {
+    margin-left: 5px
+}
