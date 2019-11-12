@@ -7,8 +7,7 @@ export class Sidebar extends React.Component {
         <div className="p-4 mb-3 bg-light rounded">
           <h4 className="font-italic">About</h4>
           <p className="mb-0">
-            This blog is a platform for writing about the places traversed, the
-            food savoured, the thoughts pondered, and the journies shared.
+            A simple personal blog.
           </p>
         </div>
         <div className="p-4">
