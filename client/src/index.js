@@ -9,7 +9,10 @@ import { App } from './components';
 
 import '../resources/scss/style.scss';
 import '../resources/scss/blog.scss';
+import '../resources/scss/form.scss';
+import '../resources/scss/post.scss';
 import '../resources/scss/map.scss';
+import '../resources/scss/react-tagsinput.scss';
 
 // control global debug
 let debug = require('debug');
