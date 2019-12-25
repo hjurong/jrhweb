@@ -1,32 +1,25 @@
 /*
-   Copyright 2018 Makoto Consulting Group, Inc.
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+ * app settings
  */
 'use strict';
+const path = require('path');
+const dotenv = require('dotenv')
+const result = dotenv.config({
+    path: path.resolve(process.cwd(), 'env/env.sh')
+});
 
 /**
  * appSettings - all relative to the project root
  */
 const appSettings = {
-    mongodb_dbpath: '/var/lib/mongo/',
-    mongodb_url: 'mongodb://localhost:27017',
-    mongodb_db_name: 'shoppingList',
-    brand_file_name: '../data/Grocery_Brands_Database.csv',
-    item_file_name: '../data/Grocery_UPC_Database.csv',
-
-    server_host: 'localhost',
-    server_listen_port: 3000,
+    logfile: process.env.SERVER_LOG_FILE,
+    mysqlusr: process.env.MYSQL_USR,
+    mysqlpwd: process.env.MYSQL_PWD,
+    mysqldbname: process.env.MYSQL_DBNAME,
+    serverPort: process.env.SERVER_PORT,
+    SSLCertificateFile: process.env.SSL_CERT_FILE,
+    SSLCertificateKeyFile: process.env.SSL_KEY_FILE,
+    publicDir: process.env.PUBLIC_DIR,
 };
 
 module.exports = appSettings;

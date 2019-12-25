@@ -1,32 +1,14 @@
 /*
-   Copyright 2018 Makoto Consulting Group, Inc.
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
  */
 'use strict';
 
-// Node http
 const http = require('http');
-// For tesing
 const assert = require('assert');
-// For MongoDB stuff
-const mongodb = require('mongodb');
-// Logger
-const logger = require('../utils/logger');
-//logger.setLogLevel(logger.Level.DEBUG);
-
-// Application settings
+const mysql = require('mysql');
 const appSettings = require('../config/app-settings');
+const logging = require('../utils/logging');
+const logger = logging.getLogger('app::utils');
+
 /**
  * Write the response from the server.
  * 
@@ -91,55 +73,41 @@ function assertEqual(actual, expected) {
     assert.equal(actual, expected, `Assert failed: actual => ${actual}, expected => ${expected}`);
 }
 
-/**
- * The DB connection variable
- */
-let db;
-let mongodbClient;
+var db;
 
-/**
- * Initializes the MongoDB.
- * 
- * @return {Promise}
- */
-function dbConnect() {
-    return new Promise((resolve, reject) => {
-        logger.debug('Connecting to MongoDB database: ' + appSettings.mongodb_dbpath, 'utils.dbConnect()');
-        if (db) {
-            logger.debug('MongoDB already connected, returning open connection.', 'utils.dbConnect()');
-            resolve(db);
-        } else {
-            logger.debug('MongoDB not connected. Creating new MongoDB connection.', 'utils.dbConnect()');
-            mongodb.MongoClient.connect(appSettings.mongodb_url, { useNewUrlParser: true }, function(err, client) {
-                if (err) {
-                    logger.error('Error connecting to the MongoDB URL: ' + appSettings.mongodb_url);
-                    reject(err);
-                }
-                logger.debug('MongoDB connected.', 'utils.dbConnect()');
-                mongodbClient = client;
-                db = mongodbClient.db(appSettings.mongodb_db_name);
-                // Make sure connection closes when Node exits
-                process.on('exit', (code) => {
-                    logger.debug(`Closing MongoDB connection (node exit code ${code})...`, 'dbConnect()');
-                    dbClose();
-                    logger.debug(`MongoDB connection closed.`, 'dbConnect()');
-                });
-                resolve(db);
-            });    
-        }
-    });
-}
-
-/**
- * Closes the MongoDB client connection
- */
-function dbClose() {
-    if (mongodbClient && mongodbClient.isConnected()) {
-        logger.debug('Closing MongoDB connection...');
-        mongodbClient.close();
-        logger.debug('MongoDB connection closed.');
+function getDatabase() {
+    if (typeof db === 'undefined') {
+        // switch here if other db are supported
+        db = mysqldb_init();
     }
+    return db;
 }
+/**
+ * Initializes the module:
+ * - DB connection. An on(exit) handler is registered to close the DB connection
+ * when Node terminates.
+ */
+function mysqldb_init() {
+    var connection = mysql.createConnection({
+      host     : '127.0.0.1',
+      user     : appSettings.mysqlusr,
+      password : appSettings.mysqlpwd,
+      database : appSettings.mysqldbname,
+    });
+    
+    connection.connect(function(err) {
+      if (err) {
+        logger.error('[mysqldb_init] error connecting: ' + err.stack);
+        return;
+      }
+      logger.info('connected to mysql server');
+      process.on('exit', (code) => {
+        logger.info(`closing connection to mysql server, exit code ${code}`);
+        connection.end();
+      });
+    });
+    return connection;
+};
 
 /**
  * Helper function:
@@ -198,12 +166,24 @@ function httpRequest(requestMethod, requestPath, postData, resultsCallback) {
     }
 }
 
+function queryPromise(sql, values) {
+    return new Promise((resolve, reject) => {
+        db.query(sql, values, (error, results, fields) => {
+            if (error) {
+                logger.error(error);
+                reject(error);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
 
 // What's exported
 module.exports.writeServerResponse = writeServerResponse;
 module.exports.writeServerJsonResponse = writeServerJsonResponse;
 module.exports.transformChunkIntoLines = transformChunkIntoLines;
-module.exports.dbConnect = dbConnect;
-module.exports.dbClose = dbClose;
+module.exports.queryPromise = queryPromise;
+module.exports.getDatabase = getDatabase;
 module.exports.assertEqual = assertEqual;
 module.exports.httpRequest = httpRequest;

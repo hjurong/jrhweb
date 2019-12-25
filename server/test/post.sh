@@ -1,0 +1,1 @@
+curl -i -X POST -H 'Content-Type: application/json' -d '{"title":"test post", "date":"2019-11-24","location":[12.23,43.23],"place_name":"place","imgname":"img.png","tags":{"add":["2"],"del":["1"]},"content":"content"}' https://juronghuang.me:8000/api/rest/posts
