@@ -36,6 +36,11 @@ export const mapMarkerClicked = data => ({
   data
 })
 
+export const mapThumbnailClicked = data => ({
+  type: 'MAP_THUMBNAIL_CLICKED',
+  data
+})
+
 export const blogFormSubmitted = data => ({
   type: 'BLOG_FORM_SUBMITTED',
   data

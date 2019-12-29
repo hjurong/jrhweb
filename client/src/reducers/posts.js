@@ -5,7 +5,12 @@ const posts = (state={articles: []}, action) => {
         case 'HOME_PAGE_LOADED':
             return {
                 ...state,
-                articles: action.data.articles,
+                post: action.data.post,
+            };
+        case 'BLOG_POST_EDIT_CLICKED':
+            return {
+                ...state,
+                post: action.data.post,
             };
         default:
             return state;
