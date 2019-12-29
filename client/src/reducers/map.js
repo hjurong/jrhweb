@@ -12,6 +12,11 @@ const map = (state=[], action) => {
                 ...state,
                 center: action.data.center,
             }
+        case 'MAP_THUMBNAIL_CLICKED':
+            return {
+                ...state,
+                postid: action.data.postid,
+            };
         case 'MAP_PLACENAME_CHANGED':
             return {
                 ...state,

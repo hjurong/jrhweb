@@ -75,11 +75,12 @@ module.exports = {
 
   devServer: {
     host: '0.0.0.0',
+    port: 3000,
     historyApiFallback: true,
     publicPath: '/',
-    contentBase: './dist',
+    contentBase: '/app/data/jrhweb/', 
     compress: true,
-    https: false,
+    https: true,
     headers: {
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",

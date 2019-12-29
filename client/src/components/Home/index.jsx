@@ -6,6 +6,7 @@ import { Form } from "../../components/Blog";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 
+
 class Home extends React.Component {
     constructor(props) {
         super(props);
@@ -47,7 +48,7 @@ class Home extends React.Component {
                 {this.props.showform ? 
                     <Form isedit={this.props.isedit}
                         placename={this.props.placename}
-                        center={this.props.center} /> : 
+                        location={this.props.location} /> : 
                     <Post />
                 }
                 </div>
@@ -63,7 +64,7 @@ const mapStateToProps = state => ({
     showform: state.home.showform || false,
     isedit: state.home.isedit || false,
     placename: state.map.placename || "",
-    center: state.map.center || [],
+    location: state.map.center || [],
 });
 
 const mapDispatchToProps = dispatch => ({
