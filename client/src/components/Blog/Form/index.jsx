@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { connect } from 'react-redux';
-import { EditorState, convertToRaw, ContentState } from 'draft-js';
+import { EditorState, convertToRaw, convertFromHTML, ContentState } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
@@ -11,8 +11,11 @@ import { blogFormSubmitted, blogFormCancelled } from '../../../actions'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import 'croppie/croppie.css';
 
+const appSettings = require('../../../lib/app-settings');
 const Croppie = require('croppie');
+const dateFormat = require('dateformat');
 const loadImage = require('blueimp-load-image');
+const zlib = require('zlib');
 var formLogger = require('debug')("app:blog:form");
 
 class Form extends React.Component {
@@ -23,30 +26,37 @@ class Form extends React.Component {
             title: "",
             date: "",
             editorState: EditorState.createEmpty(),
-            postId: -1,
             postTags: [],
             autoCompleteTags: [],
             placename: this.props.placename || "",
-            center: this.props.center || [],
         };
 
-        if (this.props.isedit) {
-            const html = "<p>test</p>";
+        if (this.props.isedit && this.props.post !== undefined) {
+            this.state.postid = this.props.post.postid;
+            this.state.title = this.props.post.title;
+            this.state.date = dateFormat(this.props.post.date, 'isoDate');
+            this.state.postTags = this.props.post.tagnames.split(',');
+            this.state.placename = this.props.post.placename;
+
+            const contentBlock = convertFromHTML(this.props.post.htmlContent);
             if (contentBlock) {
-                const contentState = ContentState.createFromBlockArray(contentBlock.contentBlocks);
-                const editorState = EditorState.createWithContent(contentState);
-                this.state['editorState'] = editorState;
+                const contentState = ContentState.createFromBlockArray(
+                    contentBlock.contentBlocks,
+                    contentBlock.entityMap,
+                );
+                this.state['editorState'] = EditorState.createWithContent(contentState);
             }
         }
 
         this.handleInputChange = this.handleInputChange.bind(this);
+        this.handlePostTagsChange = this.handlePostTagsChange.bind(this);
         this.onEditorStateChange = this.onEditorStateChange.bind(this);
         this.onImgInputChange = this.onImgInputChange.bind(this);
         this.onImgDeleteClick = this.onImgDeleteClick.bind(this);
-        this.handlePostTagsChange = this.handlePostTagsChange.bind(this);
         this.onPostFormClear = this.onPostFormClear.bind(this);
         this.onPostFormCancel = this.onPostFormCancel.bind(this);
         this.onPostFormSubmit = this.onPostFormSubmit.bind(this);
+        this.toLatLng = this.toLatLng.bind(this);
     }
     onEditorStateChange(editorState) {
         formLogger("editor emitted state changed");
@@ -77,6 +87,9 @@ class Form extends React.Component {
         this.setState({ errormessage: errmsg });
         this.setState({ [name]: value });
     }
+    toLatLng(location) {
+        return `${location.lat},${location.lng}`;
+    }
     onPostFormCancel(event) {
         event.preventDefault();
         this.blogFormCancelled({ showform: false });
@@ -93,25 +106,53 @@ class Form extends React.Component {
     onPostFormSubmit(event) {
         event.preventDefault(); //FIXME
 
-        const formData = new FormData();
-        formData.append(
-            'content', 
-            draftToHtml(convertToRaw(
+        let formPromise = new Promise(function(resolve, reject) {
+            let formData = new FormData();
+            let content = draftToHtml(convertToRaw(
                 this.state.editorState.getCurrentContent()
-            ))
-        );
-        formData.append('id', this.state.postId);
-        formData.append('date', this.state.date);
-        formData.append('tags', this.state.postTags);
-        formData.append('title', this.state.title);
-        formData.append('center', this.state.center);
-        formData.append('placename', this.state.placename);
-        if ('croppie' in this.state) {
-            formData.append('postimg', this.state.croppie)
-        }
+            ));
+            let zbuffer = zlib.deflateSync(content);
+            formData.append('content', zbuffer.toString('base64'));
+            formData.append('date', this.state.date);
+            formData.append('tags', JSON.stringify({add:this.state.postTags}));
+            formData.append('title', this.state.title);
+            formData.append('location', this.toLatLng(this.props.location));
+            formData.append('placename', this.state.placename);
+            if ('croppie' in this.state) {
+                this.state.croppie.result({
+                    size: 'original',
+                    type: 'blob',
+                }).then(function(blob) {
+                    formData.append('postimgs', blob);
+                    resolve(formData);
+                });
+            } else {
+                resolve(formData);
+            }
+        }.bind(this));
 
-        formLogger("form submitted");
-        this.blogFormSubmitted({ showform: false });
+        let url = appSettings.apihost;
+        if (this.props.isedit) {
+            url = `${url}/api/rest/posts/${this.state.postid}`;
+        } else {
+            url = `${url}/api/rest/posts`;
+        }
+        formPromise.then((formData) => {
+            return fetch(url, {
+                method: 'POST',
+                body: formData,
+            });
+        }).then((resp) => resp.json()).then(function(data) {
+            formLogger("form submitted - resp=", data);
+            this.blogFormSubmitted({ 
+                showform: false,
+                postid: data.postid,
+            });
+        }.bind(this)).catch((err) => {
+            formLogger("form submit errored: ", err);
+            this.setState('postError', JSON.stringify(err.err));
+            this.postErrorWrap.style.display = "block";
+        });
     }
     onImgDeleteClick(event) {
         this.cropContainter.style.display = 'none';
@@ -167,6 +208,11 @@ class Form extends React.Component {
         const { editorState } = this.state;
         return (
             <div id={this.props.id} className="blog-form" ref={el => this.blogFormDiv = el} >
+                <div className="post-error-wrap" ref={el => this.postErrorWrap = el}>
+                    <div className="alert alert-danger">
+                        {this.state.postError}
+                    </div>
+                </div>
                 <form onSubmit={this.onPostFormSubmit} ref={el => this.postForm = el}>
                     {this.state.errormessage}
                     <div className="form-group">
@@ -236,7 +282,7 @@ class Form extends React.Component {
 }
 
 const mapStateToProps = state => ({
-    
+    post: state.posts.post, 
 });
 
 const mapDispatchToProps = dispatch => ({
