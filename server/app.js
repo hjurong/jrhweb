@@ -4,6 +4,7 @@
 
 const path = require('path');
 const express = require('express');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const createError = require('http-errors');
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
+//app.use(cors()); /* dev */
 
 // Path routing
 app.use(indexRouter);

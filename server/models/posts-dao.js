@@ -13,6 +13,10 @@ function fetch(params) {
     return postsDaoImpl.fetch(params);
 }
 
+function fetchgeo(params) {
+    return postsDaoImpl.fetchgeo(params);
+}
+
 function create(data) {
     return postsDaoImpl.create(data);
 }
@@ -30,6 +34,7 @@ function remove(id) {
 }
 
 module.exports.fetch = fetch;
+module.exports.fetchgeo = fetchgeo;
 module.exports.read = read;
 module.exports.create = create;
 module.exports.update = update;
