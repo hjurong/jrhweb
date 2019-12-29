@@ -8,6 +8,11 @@ const home = (state=[], action) => {
                 showform: action.data.showform,
                 isedit: action.data.isedit,
             };
+        case 'MAP_THUMBNAIL_CLICKED':
+            return {
+                ...state,
+                postid: action.data.postid,
+            };
         case 'BLOG_FORM_CANCELLED':
             return {
                 ...state,
@@ -17,6 +22,7 @@ const home = (state=[], action) => {
             return {
                 ...state,
                 showform: action.data.showform,
+                postid: action.data.postid,
             };
         case 'BLOG_POST_EDIT_CLICKED':
             return {
