@@ -5,6 +5,7 @@
  */
 
 const appSettings = require('../config/app-settings');
+const GeoJSON = require('geojson');
 const logging = require('../utils/logging');
 const logger = logging.getLogger('app::model::posts-dao-mysql');
 const utils = require('../utils/utils');
@@ -13,8 +14,9 @@ const db = utils.getDatabase();
 function fetch(params) {
     let limit = params.limit || 100;
     let where = params.where || '';
+    let scols = params.select || '*';
     const sql = `
-    select * from posts 
+    select ${scols} from posts 
         left join ( 
             select postid, group_concat(fname) as fnames from imgs group by postid 
         ) imgs on posts.id = imgs.postid 
@@ -36,6 +38,17 @@ function fetch(params) {
             statusCode: 404,
             err: err,
         }
+    });
+}
+
+function fetchgeo(params) {
+    logger.info("fetchgeo ", params);
+    params.select = 'posts.id as postid, fnames, ST_X(location) as lng, ST_Y(location) as lat';
+    return fetch(params).then((res) => {
+        if (res.statusCode == 200) {
+            res.data = GeoJSON.parse(res.data, {Point: ['lng','lat']});
+        }
+        return res;
     });
 }
 
@@ -202,6 +215,7 @@ function read(postid) {
     return fetch(params);
 }
 
+
 function update(postid, params) {
     let transaction = utils.queryPromise('START TRANSACTION');
     let postPromise = transaction.then((res) => {
@@ -272,6 +286,7 @@ function remove(postid) {
 }
 
 module.exports.fetch = fetch;
+module.exports.fetchgeo = fetchgeo;
 module.exports.read = read;
 module.exports.create = create;
 module.exports.update = update;

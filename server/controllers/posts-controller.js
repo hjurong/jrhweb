@@ -29,7 +29,23 @@ const logger = logging.getLogger('app::controller::rest::posts');
  */
 function fetch(req, res, next) {
     logger.debug('fetch()');
+    var err = validationResult(req);
+    if (!err.isEmpty()) {
+        logger.error(err.mapped());
+        utils.writeServerJsonResponse(res, {"err":err.mapped()}, 400);
+        return;
+    }
     postsDao.fetch(req.query).then((result) => {
+        utils.writeServerJsonResponse(res, result.data, result.statusCode);
+    }).catch((err) => {
+        logger.error(err);
+        next(err);
+    });
+}
+
+function fetchgeo(req, res, next) {
+    logger.info("fetchgeo", req.query, postsDao.fetchgeo);
+    postsDao.fetchgeo(req.query).then((result) => {
         utils.writeServerJsonResponse(res, result.data, result.statusCode);
     }).catch((err) => {
         logger.error(err);
@@ -65,6 +81,7 @@ function saveImgs(postid, imgname, buf) {
  * @param {Object} next - the next middleware function in the req/res cycle
  */
 function create(req, res, next) {
+    logger.info("received req: ", req.body);
     if (!req.file) {
         utils.writeServerJsonResponse(res, {"err":"missing file"}, 400);
         return;
@@ -81,16 +98,12 @@ function create(req, res, next) {
     params = Object.assign(params, {
         imgname: imgname,
     });
-    // TODO: remove the tags parse
     params.tags = JSON.parse(params.tags);
     logger.debug('create()', params);
 
     let createPromise = postsDao.create(params);
     let saveImgsPromise = createPromise.then((result) => {
         logger.debug('create() -> promise ->', result);
-        if (!result.data || !result.data.postid) {
-            return;
-        }
 
         let promises = saveImgs(result.data.postid, imgname, req.file.buffer);
         promises.unshift({imgSaved:true});
@@ -152,7 +165,6 @@ function update(req, res, next) {
         });
     }
 
-    // TODO: remove the tags parse
     params.tags = JSON.parse(params.tags);
     logger.debug('update()', params);
 
@@ -199,6 +211,7 @@ function remove(req, res, next) {
 
 
 module.exports.fetch = fetch;
+module.exports.fetchgeo = fetchgeo;
 module.exports.create = create;
 module.exports.read = read;
 module.exports.update = update;

@@ -6,15 +6,16 @@ const upload = require('../../../middlewares/upload');
 const validate = require('../../../middlewares/post-validators');
 
 // REST service
-router.get('/', postsController.fetch);
-router.get('/:postId', postsController.read);
+router.get('/', validate.postQueryValidators, postsController.fetch);
+router.get('/geo', postsController.fetchgeo);
+router.get('/:postId(\\d+)', postsController.read);
 
 router.post('/', 
             [upload.single('postimgs')].concat(validate.postCreateValidators), 
             postsController.create);
-router.post('/:postId/update', 
+router.post('/:postId(\\d+)/update', 
             [upload.single('postimgs')].concat(validate.postUpdateValidators), 
             postsController.update);
-router.post('/:postId/remove', postsController.remove);
+router.post('/:postId(\\d+)/remove', postsController.remove);
 
 module.exports = router;
