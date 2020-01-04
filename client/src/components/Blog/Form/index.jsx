@@ -25,10 +25,12 @@ class Form extends React.Component {
         this.state = {
             title: "",
             date: "",
+            auth: "",
             editorState: EditorState.createEmpty(),
             postTags: [],
             autoCompleteTags: [],
             placename: this.props.placename || "",
+            location: this.props.location || {},
         };
 
         if (this.props.isedit && this.props.post !== undefined) {
@@ -37,6 +39,7 @@ class Form extends React.Component {
             this.state.date = dateFormat(this.props.post.date, 'isoDate');
             this.state.postTags = this.props.post.tagnames.split(',');
             this.state.placename = this.props.post.placename;
+            this.state.location = this.props.post.location;
 
             const contentBlock = convertFromHTML(this.props.post.htmlContent);
             if (contentBlock) {
@@ -88,7 +91,11 @@ class Form extends React.Component {
         this.setState({ [name]: value });
     }
     toLatLng(location) {
-        return `${location.lat},${location.lng}`;
+        if (location.hasOwnProperty('lat')) {
+            return `${location.lat},${location.lng}`;
+        } else if (location.hasOwnProperty('x')) {
+            return `${location.x},${location.y}`;
+        }
     }
     onPostFormCancel(event) {
         event.preventDefault();
@@ -114,9 +121,10 @@ class Form extends React.Component {
             let zbuffer = zlib.deflateSync(content);
             formData.append('content', zbuffer.toString('base64'));
             formData.append('date', this.state.date);
+            formData.append('auth', this.state.auth);
             formData.append('tags', JSON.stringify({add:this.state.postTags}));
             formData.append('title', this.state.title);
-            formData.append('location', this.toLatLng(this.props.location));
+            formData.append('location', this.toLatLng(this.state.location));
             formData.append('placename', this.state.placename);
             if ('croppie' in this.state) {
                 this.state.croppie.result({
@@ -133,7 +141,7 @@ class Form extends React.Component {
 
         let url = appSettings.apihost;
         if (this.props.isedit) {
-            url = `${url}/api/rest/posts/${this.state.postid}`;
+            url = `${url}/api/rest/posts/${this.state.postid}/update`;
         } else {
             url = `${url}/api/rest/posts`;
         }
@@ -143,14 +151,17 @@ class Form extends React.Component {
                 body: formData,
             });
         }).then((resp) => resp.json()).then(function(data) {
-            formLogger("form submitted - resp=", data);
+            formLogger("form submitted - resp=", url, data);
+            if (data.hasOwnProperty('err')) {
+                throw data.err;
+            }
             this.blogFormSubmitted({ 
                 showform: false,
                 postid: data.postid,
             });
         }.bind(this)).catch((err) => {
             formLogger("form submit errored: ", err);
-            this.setState('postError', JSON.stringify(err.err));
+            this.setState({'postError': JSON.stringify(err)});
             this.postErrorWrap.style.display = "block";
         });
     }
@@ -242,10 +253,10 @@ class Form extends React.Component {
                             ref={el => this.imgUploadInput = el}
                             onChange={this.onImgInputChange}
                             accept="image/*"
-                            required={this.props.isedit} />
+                            required={!this.props.isedit} />
                         <small id="fileHelp" className="form-text text-muted">
                             Upload a photo for this place
-                    </small>
+                        </small>
                         <div className="cropContainer" ref={el => this.cropContainter = el}>
                             <span className="rotateLeft" ref={el => this.rotateLeft = el}>
                                 <i className="fas fa-undo-alt"></i>
@@ -269,6 +280,11 @@ class Form extends React.Component {
                             editorClassName="post-editor-editor"
                             onEditorStateChange={this.onEditorStateChange}
                         />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="auth">Auth:</label>
+                        <input type="password" className="form-control" name="auth" placeholder="Secret Auth"
+                            value={this.state.auth} onChange={this.handleInputChange} required />
                     </div>
                     <div className="form-group">
                         <button type="submit" className="btn btn-sm btn-outline-dark form-btn-submit">Submit</button>

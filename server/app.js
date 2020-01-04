@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
-//app.use(cors()); /* dev */
+app.use(cors()); 
 
 // Path routing
 app.use(indexRouter);

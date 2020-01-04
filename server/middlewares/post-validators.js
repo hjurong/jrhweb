@@ -1,3 +1,5 @@
+
+const appSettings = require('../config/app-settings');
 const { check } = require('express-validator/check');
 
 const today = new Date()
@@ -14,18 +16,21 @@ let postTagsValidator = check('tags').isJSON();
 let postTagsAddValidator = check('tags.add.*').isAlphanumeric().trim();
 let postTagsDelValidator = check('tags.del.*').isAlphanumeric().trim();
 let postContentValidator = check('content').isBase64();
+let postAuthValidator = check('auth').equals(appSettings.secretAuth);
 
 let postCreateValidators = [
     postTitleValidator, postDateValidator, postLocationValidator, 
     postPlacenameValidator, postTagsValidator, postTagsAddValidator, 
-    postContentValidator
+    postContentValidator, postAuthValidator,
 ];
 
 let postUpdateValidators = [
     postTitleValidator, postDateValidator, postLocationValidator, 
     postPlacenameValidator, postTagsValidator, postTagsAddValidator, 
-    postContentValidator
+    postContentValidator, postAuthValidator,
 ];
+
+let postDeleteValidators = [ postAuthValidator, ];
 
 let postQueryValidators = [
     postLimitValidator,
@@ -34,3 +39,4 @@ let postQueryValidators = [
 module.exports.postCreateValidators = postCreateValidators;
 module.exports.postUpdateValidators = postUpdateValidators;
 module.exports.postQueryValidators = postQueryValidators;
+module.exports.postDeleteValidators = postDeleteValidators;
