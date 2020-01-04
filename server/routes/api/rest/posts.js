@@ -16,6 +16,8 @@ router.post('/',
 router.post('/:postId(\\d+)/update', 
             [upload.single('postimgs')].concat(validate.postUpdateValidators), 
             postsController.update);
-router.post('/:postId(\\d+)/remove', postsController.remove);
+router.post('/:postId(\\d+)/remove', 
+            validate.postDeleteValidator, 
+            postsController.remove);
 
 module.exports = router;

@@ -9,7 +9,7 @@
     "lint-fix": "npm run lint -- --fix",
     "load-db": "node ./utils/load-mongodb",
     "pre-start": "source ./env/env.sh",
-    "start": "node ./bin/www",
+    "start": "pm2 start ./bin/www",
     "start-dev": "nodemon --verbose --ignore 'public/*' -e js,pug,css,json ./bin/www",
     "start-dev-inspect": "nodemon --inspect --verbose -e js,pug,css,json ./bin/www",
     "test": "mocha ./test/test-rest-services"
@@ -29,6 +29,7 @@
   "dependencies": {
     "ajv": "^6.10.2",
     "async": "^2.6.1",
+    "compression": "^1.7.4",
     "cookie-parser": "~1.4.3",
     "cors": "^2.8.5",
     "dateformat": "^3.0.3",
