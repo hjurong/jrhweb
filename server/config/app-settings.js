@@ -20,6 +20,7 @@ const appSettings = {
     SSLCertificateFile: process.env.SSL_CERT_FILE,
     SSLCertificateKeyFile: process.env.SSL_KEY_FILE,
     publicDir: process.env.PUBLIC_DIR,
+    secretAuth: process.env.SECRET_AUTH,
 };
 
 module.exports = appSettings;
