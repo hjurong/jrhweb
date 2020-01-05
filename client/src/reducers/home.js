@@ -23,6 +23,7 @@ const home = (state=[], action) => {
                 ...state,
                 showform: action.data.showform,
                 postid: action.data.postid,
+                refresh: action.data.refresh,
             };
         case 'BLOG_POST_EDIT_CLICKED':
             return {
