@@ -1,7 +1,7 @@
 import React from "react";
 
 import { connect } from 'react-redux';
-import { blogPostEditClicked } from '../../../actions'
+import { blogPostEditClicked, blogPostLoaded } from '../../../actions'
 
 const zlib = require('zlib');
 const dateFormat = require('dateformat');
@@ -12,11 +12,16 @@ class Post extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            postptr:0,
+        };
         this.onBlogPostEditClicked = this.onBlogPostEditClicked.bind(this);
+        this.onPrevBlogPostClicked = this.onPrevBlogPostClicked.bind(this);
+        this.onNextBlogPostClicked = this.onNextBlogPostClicked.bind(this);
         this.handleStateChange = this.handleStateChange.bind(this);
         this.fetchPost = this.fetchPost.bind(this);
         this.renderPost = this.renderPost.bind(this);
+        this.renderAlert = this.renderAlert.bind(this);
     }
     onBlogPostEditClicked(event) {
         this.blogPostEditClicked({
@@ -24,6 +29,30 @@ class Post extends React.Component {
             isedit: true,
             post: this.state.post,
         });
+    }
+    renderAlert(type) {
+        return `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+            Already at ${type} post
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>`
+    } 
+    onPrevBlogPostClicked(event) {
+        if (this.state.postptr == 0) {
+            this.postAlertWrap.innerHTML = this.renderAlert('oldest');
+            return;
+        }
+        this.state.postptr--;
+        this.renderPost(this.props.postids[this.state.postptr]);
+    }
+    onNextBlogPostClicked(event) {
+        if (this.state.postptr == this.props.postids.length-1) {
+            this.postAlertWrap.innerHTML = this.renderAlert('newest');
+            return;
+        }
+        this.state.postptr++;
+        this.renderPost(this.props.postids[this.state.postptr]);
     }
     handleStateChange(name, value) {
         switch (name) {
@@ -55,8 +84,9 @@ class Post extends React.Component {
         Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
         return fetch(url).then(resp => resp.json());
     }
-    renderPost() {
-        this.fetchPost(this.props.postid).then(function(data) {
+    renderPost(postid) {
+        postid = postid || this.props.postid;
+        this.fetchPost(postid).then(function(data) {
             postLogger("fetchPost received: ", data);
             let post = data[0];
             Object.entries(post).forEach(function(pair) {
@@ -65,10 +95,12 @@ class Post extends React.Component {
 
             post.htmlContent = this.state.content;
             this.state.post = post;
+            this.blogPostLoaded({post: post});
         }.bind(this));
     }
     componentDidMount() {
         this.blogPostEditClicked = this.props.blogPostEditClicked;
+        this.blogPostLoaded = this.props.blogPostLoaded;
         this.renderPost();
     }
     componentDidUpdate(prevProps) {
@@ -96,9 +128,14 @@ class Post extends React.Component {
                     ref={el => this.postContentWrap = el}>
                 </div>
             </div>
+            <div className="blog-alert-wrap"
+                ref={el => this.postAlertWrap = el}>
+            </div>
             <nav className="blog-pagination">
-                <button className="btn btn-outline-primary post-btn-prev">Prev</button>
-                <button className="btn btn-outline-secondary post-btn-next">Next</button>
+                <button className="btn btn-outline-primary post-btn-prev"
+                    onClick={this.onPrevBlogPostClicked}>Prev</button>
+                <button className="btn btn-outline-secondary post-btn-next"
+                    onClick={this.onNextBlogPostClicked}>Next</button>
             </nav>
         </div>
         );
@@ -107,10 +144,12 @@ class Post extends React.Component {
 
 const mapStateToProps = state => ({
     postid: state.home.postid,
+    postids: state.map.postids,
 });
 
 const mapDispatchToProps = dispatch => ({
     blogPostEditClicked: data => dispatch(blogPostEditClicked(data)),
+    blogPostLoaded: data => dispatch(blogPostLoaded(data)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Post);

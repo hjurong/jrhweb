@@ -55,3 +55,8 @@ export const blogPostEditClicked = data => ({
   type: 'BLOG_POST_EDIT_CLICKED',
   data
 })
+
+export const blogPostLoaded = data => ({
+  type: 'BLOG_POST_LOADED',
+  data
+})

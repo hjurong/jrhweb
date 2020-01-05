@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import { EditorState, convertToRaw, convertFromHTML, ContentState } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
-import htmlToDraft from 'html-to-draftjs';
 import TagsInput from 'react-tagsinput';
 import { blogFormSubmitted, blogFormCancelled } from '../../../actions'
 
@@ -59,6 +58,7 @@ class Form extends React.Component {
         this.onPostFormClear = this.onPostFormClear.bind(this);
         this.onPostFormCancel = this.onPostFormCancel.bind(this);
         this.onPostFormSubmit = this.onPostFormSubmit.bind(this);
+        this.onPostFormDelete = this.onPostFormDelete.bind(this);
         this.toLatLng = this.toLatLng.bind(this);
     }
     onEditorStateChange(editorState) {
@@ -110,8 +110,28 @@ class Form extends React.Component {
         });
         event.preventDefault();
     }
+    onPostFormDelete(event) {
+        let url = `${appSettings.apihost}/api/rest/posts/${this.state.postid}/remove`;
+        let formData = new FormData();
+        formData.append('auth', this.state.auth);
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+        }).then((resp) => resp.json()).then(function(data) {
+            if (data.hasOwnProperty('err')) {
+                throw data.err;
+            }
+            this.blogFormSubmitted({ 
+                showform: false,
+            });
+        }.bind(this)).catch((err) => {
+            this.setState({'postError': JSON.stringify(err)});
+            this.postErrorWrap.style.display = "block";
+        });
+        event.preventDefault();
+    }
     onPostFormSubmit(event) {
-        event.preventDefault(); //FIXME
+        event.preventDefault();
 
         let formPromise = new Promise(function(resolve, reject) {
             let formData = new FormData();
@@ -157,7 +177,8 @@ class Form extends React.Component {
             }
             this.blogFormSubmitted({ 
                 showform: false,
-                postid: data.postid,
+                postid: data.postid || this.state.postid,
+                refresh: this.props.isedit ? -1 : data.postid,
             });
         }.bind(this)).catch((err) => {
             formLogger("form submit errored: ", err);
@@ -290,6 +311,10 @@ class Form extends React.Component {
                         <button type="submit" className="btn btn-sm btn-outline-dark form-btn-submit">Submit</button>
                         <button onClick={this.onPostFormClear} className="btn btn-sm btn-outline-dark form-btn-clear">Clear</button>
                         <button onClick={this.onPostFormCancel} className="btn btn-sm btn-outline-dark form-btn-cancel">Cancel</button>
+                        {this.props.isedit ? 
+                            <button onClick={this.onPostFormDelete} className="btn btn-sm btn-outline-dark form-btn-delete">Delete</button>
+                            : ""
+                        }
                     </div>
                 </form>
             </div>
