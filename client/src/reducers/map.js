@@ -5,7 +5,7 @@ const map = (state=[], action) => {
         case 'MAP_LOADED':
             return {
                 ...state,
-                places: action.data.places,
+                postids: action.data.postids,
             };
         case 'MAP_CENTER_CHANGED':
             return {

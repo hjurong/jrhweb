@@ -6,30 +6,40 @@ import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from '..
 import { connect } from 'react-redux';
 import { mapLoaded, mapCenterChanged, mapPlacenameChanged, mapMarkerClicked, mapThumbnailClicked } from '../../../actions'
 
-mapboxgl.accessToken = "pk.eyJ1IjoiaGp1cm9uZyIsImEiOiJjanJmYmhkamMxZzNiNDlwZnhiNmNvMWNyIn0.CKGbJVpC1mqbCACK7RtH0w";
 const appSettings = require('../../../lib/app-settings');
+const utils = require('../../../lib/utils');
 var mapLogger = require('debug')("app:blog:map");
+
+mapboxgl.accessToken = appSettings.mapboxToken;
 
 class Map extends React.Component {
     constructor(props) {
         super(props);
     
         this.state = {
-          center: { lng: -32.437177, lat: 50.742416 },
+          center: this.props.center,
           places: [],
           placename: "",
           zoom: 1,
         };
+
         this._markers = {};
         this.MIN_ZOOM = 1;
         this.MAX_ZOOM = 19;
         this.setMapCenterState = this.setMapCenterState.bind(this);
         this.setMapPlacenameState = this.setMapPlacenameState.bind(this);
         this.fetchPlaces = this.fetchPlaces.bind(this);
+        this.loadClusters = this.loadClusters.bind(this);
         this.debounce = this.debounce.bind(this);
     }
     setMapPlacesState(value) {
+        // value: geojson
         this.setState({places: value});
+        let postids = [];
+        value.features.forEach((feature) => {
+            postids.push(feature.properties.postid);
+        });
+        this.onLoad({postids: postids});
     }
     setMapCenterState(value) {
         this.setState({center: value});
@@ -161,7 +171,15 @@ class Map extends React.Component {
             debounceT = setTimeout(() => func.apply(context, args), delay);
         }
     }
+    loadClusters() {
+        this.fetchPlaces().then(function(data) {
+            this.setMapPlacesState(data);
+            this.trees.load(data.features);
+            this.getObservations();
+        }.bind(this));
+    }
     componentDidMount() {
+        this.onLoad = this.props.onLoad;
         this.mapPlacenameChanged = this.props.mapPlacenameChanged;
         this.mapCenterChanged = this.props.mapCenterChanged;
         this.mapMarkerClicked = this.props.mapMarkerClicked;
@@ -191,11 +209,7 @@ class Map extends React.Component {
             scrollZoom: true,
         });
         
-        this.fetchPlaces().then(function(data) {
-            this.setMapPlacesState(data);
-            this.trees.load(data.features);
-            this.getObservations();
-        }.bind(this));
+        this.loadClusters();
 
         this.targetElement = document.querySelector('#map-container');
         var el = document.createElement('div');
@@ -247,7 +261,20 @@ class Map extends React.Component {
              * and problem with global markers variable */
             mapLogger('moveend');
             this.getObservations();
-        }.bind(this), 100));
+        }.bind(this), 200));
+    }
+    componentDidUpdate(prevProps, prevState) {
+        if (utils.shallowCompare(prevProps.center, this.props.center) &&
+            utils.shallowCompare(this.props.center != prevState.center)) {
+            this.setState({ center: this.props.center });
+            this.map.flyTo({center: this.props.center});
+        } else if (prevProps.refresh != this.props.refresh &&
+            this.props.refresh != prevState.refresh) {
+            this.setState({ refresh: this.props.refresh });
+            if (this.props.refresh !== -1) {
+                this.loadClusters();
+            }
+        }
     }
     componentWillUnmount() {
         this.map.remove();
@@ -264,7 +291,8 @@ class Map extends React.Component {
 }
 
 const mapStateToProps = state => ({
-  places: state.map.places,
+  center: state.posts.center,
+  refresh: state.home.refresh,
 });
 
 const mapDispatchToProps = dispatch => ({
