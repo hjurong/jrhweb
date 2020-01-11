@@ -14,6 +14,7 @@ class Post extends React.Component {
 
         this.state = {
             postptr:0,
+            tagnames: [],
         };
         this.onBlogPostEditClicked = this.onBlogPostEditClicked.bind(this);
         this.onPrevBlogPostClicked = this.onPrevBlogPostClicked.bind(this);
@@ -38,17 +39,17 @@ class Post extends React.Component {
             </button>
         </div>`
     } 
-    onPrevBlogPostClicked(event) {
+    onNextBlogPostClicked(event) {
         if (this.state.postptr == 0) {
-            this.postAlertWrap.innerHTML = this.renderAlert('oldest');
+            this.postAlertWrap.innerHTML = this.renderAlert('latest');
             return;
         }
         this.state.postptr--;
         this.renderPost(this.props.postids[this.state.postptr]);
     }
-    onNextBlogPostClicked(event) {
+    onPrevBlogPostClicked(event) {
         if (this.state.postptr == this.props.postids.length-1) {
-            this.postAlertWrap.innerHTML = this.renderAlert('newest');
+            this.postAlertWrap.innerHTML = this.renderAlert('last');
             return;
         }
         this.state.postptr++;
@@ -126,6 +127,17 @@ class Post extends React.Component {
                 </div>
                 <div className="post-content-wrap" 
                     ref={el => this.postContentWrap = el}>
+                </div>
+                <div className="post-tags-wrap" 
+                    ref={el => this.postTagsWrap = el}>
+                    {
+                        this.state.tagnames.map((tagname, i) => {        
+                            return (
+                                <span className="badge badge-primary post-tag-span" 
+                                    key={i}>{tagname}</span>
+                            ) 
+                        })
+                    }
                 </div>
             </div>
             <div className="blog-alert-wrap"
