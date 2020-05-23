@@ -3,7 +3,7 @@ import React from "react";
 import { connect } from 'react-redux';
 import { Post } from "../../components/Blog";
 import { Form } from "../../components/Blog";
-import { Header } from "./header";
+import Header from "./header";
 import { Sidebar } from "./sidebar";
 
 

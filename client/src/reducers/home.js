@@ -31,6 +31,12 @@ const home = (state=[], action) => {
                 showform: action.data.showform,
                 isedit: action.data.isedit,
             };
+        case 'TAG_LINK_CLICKED':
+            return {
+                ...state,
+                filteredPostids: action.data.postids,
+                tagname: action.data.tagname,
+            };
         default:
             return state;
     }
