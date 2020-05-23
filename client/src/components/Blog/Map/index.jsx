@@ -30,6 +30,7 @@ class Map extends React.Component {
         this.setMapPlacenameState = this.setMapPlacenameState.bind(this);
         this.fetchPlaces = this.fetchPlaces.bind(this);
         this.loadClusters = this.loadClusters.bind(this);
+        this.filterClusters = this.filterClusters.bind(this);
         this.debounce = this.debounce.bind(this);
     }
     setMapPlacesState(value) {
@@ -68,22 +69,10 @@ class Map extends React.Component {
 
         bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
         let clusters = this.trees.getClusters(bbox, zoom);
-        
-        const _cmp = function(c1, c2) {
-            if (c1.properties.id < c2.properties.id) {
-                return -1;
-            }
-            if (c1.properties.id > c2.properties.id) {
-                return 1;
-            }
-            return 0;
-        }
 
         const _isvisible = (elem) => {
             return !!( elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length );
         }
-
-        clusters.sort(_cmp);
         
         let prevMarkersIds = [];
         Object.keys(this._markers).forEach(function(id) {
@@ -178,6 +167,29 @@ class Map extends React.Component {
             this.getObservations();
         }.bind(this));
     }
+    filterClusters() {
+        let postids = [];
+        let filteredPlaces;
+        if (this.props.filteredPostids.length == 0) {
+            filteredPlaces = this.state.places.features;
+        } else {
+            filteredPlaces = this.state.places.features.filter(function(feature) {
+                return this.props.filteredPostids.includes(feature.properties.postid);
+            }.bind(this));            
+        }
+        
+        filteredPlaces.forEach((feature) => {
+            postids.push(feature.properties.postid);
+        });
+
+        let postid = Math.max.apply(null, postids);
+
+        this.trees.load(filteredPlaces);
+        this.onLoad({postids: postids});
+        this.getObservations();
+        this.mapThumbnailClicked({postid:postid});
+
+    }
     componentDidMount() {
         this.onLoad = this.props.onLoad;
         this.mapPlacenameChanged = this.props.mapPlacenameChanged;
@@ -194,8 +206,10 @@ class Map extends React.Component {
                 fnames: props.fnames,
             }),
             reduce: (acc, props) => {
-                acc.postid = props.postid;
-                acc.fnames = props.fnames;
+                if (props.postid > acc.postid) {
+                    acc.postid = props.postid;
+                    acc.fnames = props.fnames;
+                }
             }
         });
 
@@ -264,16 +278,17 @@ class Map extends React.Component {
         }.bind(this), 200));
     }
     componentDidUpdate(prevProps, prevState) {
-        if (utils.shallowCompare(prevProps.center, this.props.center) &&
-            utils.shallowCompare(this.props.center != prevState.center)) {
+        if (utils.shallowCompare(prevProps.center, this.props.center)) {
             this.setState({ center: this.props.center });
             this.map.flyTo({center: this.props.center});
-        } else if (prevProps.refresh != this.props.refresh &&
-            this.props.refresh != prevState.refresh) {
+        } else if (prevProps.refresh != this.props.refresh) {
             this.setState({ refresh: this.props.refresh });
             if (this.props.refresh !== -1) {
                 this.loadClusters();
             }
+        } else if (utils.shallowCompare(prevProps.filteredPostids, this.props.filteredPostids)) {
+            this.setState({ filteredPostids: this.props.filteredPostids });
+            this.filterClusters();
         }
     }
     componentWillUnmount() {
@@ -293,6 +308,7 @@ class Map extends React.Component {
 const mapStateToProps = state => ({
   center: state.posts.center,
   refresh: state.home.refresh,
+  filteredPostids: state.home.filteredPostids,
 });
 
 const mapDispatchToProps = dispatch => ({

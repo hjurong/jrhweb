@@ -60,3 +60,8 @@ export const blogPostLoaded = data => ({
   type: 'BLOG_POST_LOADED',
   data
 })
+
+export const tagLinkClicked = data => ({
+  type: 'TAG_LINK_CLICKED',
+  data
+})
