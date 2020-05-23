@@ -40,6 +40,7 @@ class Post extends React.Component {
         </div>`
     } 
     onNextBlogPostClicked(event) {
+        this.state.postptr = this.props.postids.findIndex((e) => e == this.state.postid);
         if (this.state.postptr == 0) {
             this.postAlertWrap.innerHTML = this.renderAlert('latest');
             return;
@@ -48,6 +49,7 @@ class Post extends React.Component {
         this.renderPost(this.props.postids[this.state.postptr]);
     }
     onPrevBlogPostClicked(event) {
+        this.state.postptr = this.props.postids.findIndex((e) => e == this.state.postid);
         if (this.state.postptr == this.props.postids.length-1) {
             this.postAlertWrap.innerHTML = this.renderAlert('last');
             return;
