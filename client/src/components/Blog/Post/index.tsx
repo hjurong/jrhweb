@@ -98,8 +98,9 @@ class Post extends React.Component<PostProps, PostState> {
 			this.postAlertWrap.current!.innerHTML = this.renderAlert("latest");
 			return;
 		}
-		this.setState({ postptr: this.state.postptr - 1 });
-		this.renderPost(this.props.postids[this.state.postptr]);
+		this.setState({ postptr: this.state.postptr - 1 }, () => {
+            this.renderPost(this.props.postids[this.state.postptr]);
+        });
 	}
 	onPrevBlogPostClicked(event: React.MouseEvent<HTMLButtonElement>) {
 		this.setState({
@@ -109,8 +110,9 @@ class Post extends React.Component<PostProps, PostState> {
 			this.postAlertWrap.current!.innerHTML = this.renderAlert("last");
 			return;
 		}
-		this.setState({ postptr: this.state.postptr + 1 });
-		this.renderPost(this.props.postids[this.state.postptr]);
+		this.setState({ postptr: this.state.postptr + 1 }, () => {
+            this.renderPost(this.props.postids[this.state.postptr]);
+        });
 	}
 	handleStateChange(name: keyof PostState, value: any) {
 		switch (name) {
