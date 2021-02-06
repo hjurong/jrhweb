@@ -61,7 +61,7 @@ type FormState = {
 class Form extends React.Component<FormProps, FormState> {
 
     postErrorWrap = React.createRef<HTMLDivElement>();
-    cropContainter = React.createRef<HTMLDivElement>();
+    cropContainer = React.createRef<HTMLDivElement>();
     rotateLeft = React.createRef<HTMLButtonElement>();
     rotateRight = React.createRef<HTMLButtonElement>();
     imgdelete = React.createRef<HTMLButtonElement>();
@@ -257,7 +257,7 @@ class Form extends React.Component<FormProps, FormState> {
         });
     }
     onImgDeleteClick(event:React.MouseEvent<HTMLSpanElement>) {
-        this.cropContainter.current!.style.display = 'none';
+        this.cropContainer.current!.style.display = 'none';
         this.imgUploadInput.current!.value = "";
     }
     onImgInputChange(event:React.ChangeEvent<HTMLInputElement>) {
@@ -267,7 +267,7 @@ class Form extends React.Component<FormProps, FormState> {
                 if ('croppie' in this.state) {
                     c = this.state['croppie'];
                 } else {
-                    c = new Croppie(this.cropContainter, {
+                    c = new Croppie(this.cropContainer.current, {
                         viewport: { width: 250, height: 250 },
                         boundary: { width: 300, height: 300 },
                         showZoomer: true,
@@ -276,17 +276,17 @@ class Form extends React.Component<FormProps, FormState> {
                         enforceBoundary: true,
                     });
                     this.state['croppie'] = c;
-                    this.rotateLeft.addEventListener("click", function () {
+                    this.rotateLeft.current.addEventListener("click", function () {
                         c.rotate(90);
                     });
-                    this.rotateRight.addEventListener("click", function () {
+                    this.rotateRight.current.addEventListener("click", function () {
                         c.rotate(-90);
                     });
                 }
                 c.bind({
-                    url: img.toDataURL(),
+                    url: img.src,
                 });
-                this.cropContainter.style.display = 'block';
+                this.cropContainer.current.style.display = 'block';
                 formLogger("done init croppie:");
             }.bind(this);
             loadImage(event.target.files[0], onload, {
@@ -296,7 +296,7 @@ class Form extends React.Component<FormProps, FormState> {
         }
     }
     componentDidMount() {
-        this.cropContainter.current!.style.display = "None";
+        this.cropContainer.current!.style.display = "None";
     }
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.placename != this.props.placename &&
@@ -346,7 +346,7 @@ class Form extends React.Component<FormProps, FormState> {
                         <small id="fileHelp" className="form-text text-muted">
                             Upload a photo for this place
                         </small>
-                        <div className="cropContainer" ref={this.cropContainter}>
+                        <div className="cropContainer" ref={this.cropContainer}>
                             <span className="rotateLeft" ref={this.rotateLeft}>
                                 <i className="fas fa-undo-alt"></i>
                             </span>
