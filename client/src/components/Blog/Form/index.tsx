@@ -234,10 +234,10 @@ class Form extends React.Component<FormProps, FormState> {
             url = `${url}/api/rest/posts`;
         }
 
-        formPromise.then((formData) => {
+        formPromise.then((formData:FormData) => {
             let params: RequestInit = {
                 method: 'POST',
-                body: JSON.stringify(formData),
+                body: formData,
             }
             return fetch(url, params);
         }).then((resp) => resp.json()).then(function(data) {
@@ -262,7 +262,7 @@ class Form extends React.Component<FormProps, FormState> {
     }
     onImgInputChange(event:React.ChangeEvent<HTMLInputElement>) {
         if (event.target.files && event.target.files[0]) {
-            var onload = function (img) {
+            var onload = function (img:HTMLCanvasElement) {
                 var c;
                 if ('croppie' in this.state) {
                     c = this.state['croppie'];
@@ -284,7 +284,7 @@ class Form extends React.Component<FormProps, FormState> {
                     });
                 }
                 c.bind({
-                    url: img.src,
+                    url: img.toDataURL(),
                 });
                 this.cropContainer.current.style.display = 'block';
                 formLogger("done init croppie:");
@@ -292,6 +292,7 @@ class Form extends React.Component<FormProps, FormState> {
             loadImage(event.target.files[0], onload, {
                 maxWidth: 1024,
                 orientation: true,
+                canvas: true,
             });
         }
     }
