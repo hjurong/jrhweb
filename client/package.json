@@ -37,7 +37,7 @@
 		"@types/react": "^16.14.4",
 		"@types/react-dom": "^16.9.11",
 		"@types/react-redux": "^7.1.16",
-		"axios": "^0.19.2",
+		"axios": "^0.21.1",
 		"blueimp-load-image": "^2.31.0",
 		"bootstrap": "^4.6.0",
 		"croppie": "^2.6.5",
