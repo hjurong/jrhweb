@@ -1,11 +1,11 @@
-const express = require('express');
+const express = require("express");
 
 const router = express.Router();
-const tagsController = require('../../../controllers/tags-controller');
+const tagsController = require("../../../controllers/tags-controller");
 
 // REST service
-router.get('/', tagsController.fetch);
-router.get('/:tag', tagsController.read);
+router.get("/", tagsController.fetch);
+router.get("/:tag", tagsController.read);
 
 /* TODO: add this ?
 const validate = require('../../../middlewares/tag-validators');

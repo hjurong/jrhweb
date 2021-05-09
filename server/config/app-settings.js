@@ -1,11 +1,11 @@
 /*
  * app settings
  */
-'use strict';
-const path = require('path');
-const dotenv = require('dotenv')
+"use strict";
+const path = require("path");
+const dotenv = require("dotenv");
 const result = dotenv.config({
-    path: path.resolve(process.cwd(), 'env/env.sh')
+    path: path.resolve(process.cwd(), "env/env.sh"),
 });
 
 /**
@@ -16,6 +16,10 @@ const appSettings = {
     mysqlusr: process.env.MYSQL_USR,
     mysqlpwd: process.env.MYSQL_PWD,
     mysqldbname: process.env.MYSQL_DBNAME,
+    mongousr: process.env.MONGO_USR,
+    mongopwd: process.env.MONGO_PWD,
+    mongodbname: process.env.MONGO_DBNAME,
+    backingdb: process.env.BACKING_DB,
     serverPort: process.env.SERVER_PORT,
     SSLCertificateFile: process.env.SSL_CERT_FILE,
     SSLCertificateKeyFile: process.env.SSL_KEY_FILE,
