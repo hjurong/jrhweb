@@ -6,9 +6,9 @@ const upload = require("../../../middlewares/upload");
 const validate = require("../../../middlewares/post-validators");
 
 // REST service
-router.get("/", validate.postQueryValidators, postsController.fetch);
-router.get("/geo", postsController.fetchgeo);
-router.get("/:postId(\\d+)", postsController.read);
+router.get("/", validate.postQueryValidators, postsController.findMany);
+router.get("/geo", postsController.findManyGeo);
+router.get("/:postId(\\d+)", postsController.findOne);
 
 router.post(
     "/",

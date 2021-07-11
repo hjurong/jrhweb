@@ -11,19 +11,18 @@ const logger = logging.getLogger("app::controller::rest::tags");
 
 /**
  *
- * Fetches all shopping tags and redirects to the
- * tags-all page
+ * findMany using dao
  *
  * @param {Request} req - the Request object
  * @param {Response} res - the Response object
  * @param {Object} next - the next middleware function in the req/res cycle
  */
-function fetch(req, res, next) {
-    logger.debug("fetch()");
+function findMany(req, res, next) {
+    logger.debug("findMany()");
     tagsDao
-        .fetch(req.query)
+        .findMany(req.query)
         .then((result) => {
-            logger.debug("fetch()", result);
+            logger.debug("findMany()", result);
             utils.writeServerJsonResponse(res, result.data, result.statusCode);
         })
         .catch((err) => {
@@ -33,18 +32,18 @@ function fetch(req, res, next) {
 }
 
 /**
- * Fetches the specified post and all of its items
+ * findManyes the specified post and all of its items
  * and returns it to the caller.
  *
  * @param {Request} req - the Request object
  * @param {Response} res - the Response object
  * @param {Object} next - the next middleware function in the req/res cycle
  */
-function read(req, res, next) {
-    logger.debug("read()");
+function findOne(req, res, next) {
+    logger.debug("findOne()");
     let tag = req.params.tag;
     tagsDao
-        .read(tag)
+        .findOne(tag)
         .then((result) => {
             utils.writeServerJsonResponse(res, result.data, result.statusCode);
         })
@@ -54,5 +53,5 @@ function read(req, res, next) {
         });
 }
 
-module.exports.fetch = fetch;
-module.exports.read = read;
+module.exports.findMany = findMany;
+module.exports.findOne = findOne;

@@ -4,14 +4,12 @@
  * If you find a bug, please open an issue.
  */
 
-const appSettings = require("../config/app-settings");
 const GeoJSON = require("geojson");
 const logging = require("../utils/logging");
 const logger = logging.getLogger("app::model::posts-dao-mysql");
-const utils = require("../utils/utils");
-const db = utils.getDatabase();
+const dbutils = require("../utils/db");
 
-function fetch(params) {
+function findMany(params) {
     let limit = params.limit || 100;
     let where = params.where || "";
     let scols = params.select || "*";
@@ -26,9 +24,9 @@ function fetch(params) {
         ) tags on tags.postid = posts.id 
         ${where}
     order by posts.id desc limit ?`;
-    logger.debug("fetch() -> ", sql, limit);
-    return utils
-        .queryPromise(sql, limit)
+    logger.debug("findMany() -> ", sql, limit);
+    return dbutils
+        .mysqlQueryPromise(sql, limit)
         .then(function (res) {
             return {
                 data: res,
@@ -44,11 +42,11 @@ function fetch(params) {
         });
 }
 
-function fetchgeo(params) {
-    logger.info("fetchgeo ", params);
+function findManyGeo(params) {
+    logger.info("findManyGeo ", params);
     params.select =
         "posts.id as postid, fnames, ST_X(location) as lng, ST_Y(location) as lat";
-    return fetch(params).then((res) => {
+    return findMany(params).then((res) => {
         if (res.statusCode == 200) {
             res.data = GeoJSON.parse(res.data, { Point: ["lng", "lat"] });
         }
@@ -58,7 +56,7 @@ function fetchgeo(params) {
 
 function deletePosts(postid) {
     const sqlpost = "DELETE FROM posts WHERE ID = ?";
-    return utils.queryPromise(sqlpost, postid);
+    return dbutils.mysqlQueryPromise(sqlpost, postid);
 }
 
 function insertPosts(params) {
@@ -69,7 +67,7 @@ function insertPosts(params) {
     };
     let lnglat = params.location;
     const sqlpost = `INSERT INTO posts SET location=POINT(${lnglat}), ?`;
-    return utils.queryPromise(sqlpost, post);
+    return dbutils.mysqlQueryPromise(sqlpost, post);
 }
 
 function updatePosts(postid, params) {
@@ -80,7 +78,7 @@ function updatePosts(postid, params) {
     };
     let lnglat = params.location;
     const sqlpost = `UPDATE posts SET location=POINT(${lnglat}), ? WHERE id=${postid}`;
-    return utils.queryPromise(sqlpost, post);
+    return dbutils.mysqlQueryPromise(sqlpost, post);
 }
 
 function insertContents(postid, params) {
@@ -89,7 +87,7 @@ function insertContents(postid, params) {
         postid: postid,
         content: params.content,
     };
-    return utils.queryPromise(sqlcontents, content);
+    return dbutils.mysqlQueryPromise(sqlcontents, content);
 }
 
 function updateContents(postid, params) {
@@ -97,7 +95,7 @@ function updateContents(postid, params) {
     let content = {
         content: params.content,
     };
-    return utils.queryPromise(sqlcontents, content);
+    return dbutils.mysqlQueryPromise(sqlcontents, content);
 }
 
 function deleteTags(postid, params) {
@@ -106,12 +104,12 @@ function deleteTags(postid, params) {
         dels.push([postid, params.tags.del[i].toLowerCase()]);
     }
     const sqltagsdel = "DELETE FROM tags WHERE (`POSTID`, `TAG`) IN (?)";
-    return utils.queryPromise(sqltagsdel, [dels]);
+    return dbutils.mysqlQueryPromise(sqltagsdel, [dels]);
 }
 
 function clearTags(postid, params) {
     const sqltagsdel = "DELETE FROM tags WHERE postid=?";
-    return utils.queryPromise(sqltagsdel, [postid]);
+    return dbutils.mysqlQueryPromise(sqltagsdel, [postid]);
 }
 
 function insertTags(postid, params) {
@@ -120,7 +118,7 @@ function insertTags(postid, params) {
         adds.push([params.tags.add[i].toLowerCase(), postid]);
     }
     const sqltagsadd = "INSERT INTO tags (`TAG`, `POSTID`) VALUES ?";
-    return utils.queryPromise(sqltagsadd, [adds]);
+    return dbutils.mysqlQueryPromise(sqltagsadd, [adds]);
 }
 
 function insertImgs(postid, params) {
@@ -129,7 +127,7 @@ function insertImgs(postid, params) {
         fname: params.imgname,
     };
     const sqlimgs = "INSERT INTO imgs set ?";
-    return utils.queryPromise(sqlimgs, img);
+    return dbutils.mysqlQueryPromise(sqlimgs, img);
 }
 
 function updateImgs(postid, params) {
@@ -137,27 +135,19 @@ function updateImgs(postid, params) {
         fname: params.imgname,
     };
     const sqlimgs = `UPDATE imgs set ? WHERE postid=${postid}`;
-    return utils.queryPromise(sqlimgs, img);
+    return dbutils.mysqlQueryPromise(sqlimgs, img);
 }
 
 function deleteImgs(postid, params) {
     const sqlimgs = "DELETE FROM imgs where postid=?";
-    return utils.queryPromise(sqlimgs, [postid]);
+    return dbutils.mysqlQueryPromise(sqlimgs, [postid]);
 }
 
 /**
- * @params {
- *   title: string,
- *   date: date,
- *   location: string lng,lat,
- *   placename: string,
- *   imgname: string,
- *   tags: { add: list[string], del: list[stsring] },
- *   content: base64 string,
- * }
+ * insert post into tables
  */
 function create(params) {
-    let transaction = utils.queryPromise("START TRANSACTION");
+    let transaction = dbutils.mysqlQueryPromise("START TRANSACTION");
     let postPromise = transaction.then((res) => {
         return insertPosts(params);
     });
@@ -183,7 +173,7 @@ function create(params) {
     let promises = [postPromise, contentPromise, tagPromise, imgPromise];
     return Promise.all(promises)
         .then((values) => {
-            let commitPromise = utils.queryPromise("COMMIT");
+            let commitPromise = dbutils.mysqlQueryPromise("COMMIT");
             return Promise.all([values, commitPromise]);
         })
         .then((values) => {
@@ -200,30 +190,32 @@ function create(params) {
             };
         })
         .catch((err) => {
-            db.rollback(function () {
-                logger.error("rollback create");
+            dbutils.getDbConnection().then((db) => {
+                db.rollback(function () {
+                    logger.error("rollback create");
+                });
+                return {
+                    err: err,
+                    data: {},
+                    statusCode: 400,
+                };
             });
-            return {
-                err: err,
-                data: {},
-                statusCode: 400,
-            };
         });
 }
 
 /**
- * Find the shopping list for the specified id
+ * select one from table
  */
-function read(postid) {
+function findOne(postid) {
     let params = {
         limit: 1,
         where: `where posts.id=${postid}`,
     };
-    return fetch(params);
+    return findMany(params);
 }
 
 function update(postid, params) {
-    let transaction = utils.queryPromise("START TRANSACTION");
+    let transaction = dbutils.mysqlQueryPromise("START TRANSACTION");
     let postPromise = transaction.then((res) => {
         return updatePosts(postid, params);
     });
@@ -256,7 +248,7 @@ function update(postid, params) {
     let promises = [postPromise, contentPromise, tagPromise, imgPromise];
     return Promise.all(promises)
         .then((values) => {
-            let commitPromise = utils.queryPromise("COMMIT");
+            let commitPromise = dbutils.mysqlQueryPromise("COMMIT");
             return Promise.all([values, commitPromise]);
         })
         .then((values) => {
@@ -274,20 +266,21 @@ function update(postid, params) {
             };
         })
         .catch((err) => {
-            db.rollback(function () {
-                logger.error("rollback update");
+            dbutils.getDbConnection().then((db) => {
+                db.rollback(function () {
+                    logger.error("rollback update");
+                });
+                return {
+                    err: err,
+                    data: {},
+                    statusCode: 400,
+                };
             });
-            return {
-                err: err,
-                data: {},
-                statusCode: 400,
-            };
         });
 }
 
 /**
- * Remove the specified item from the specified shopping
- * list
+ * Remove the specified item table
  */
 function remove(postid) {
     const sql = "DELETE FROM posts WHERE `id`=?";
@@ -304,9 +297,9 @@ function remove(postid) {
         });
 }
 
-module.exports.fetch = fetch;
-module.exports.fetchgeo = fetchgeo;
-module.exports.read = read;
+module.exports.findMany = findMany;
+module.exports.findManyGeo = findManyGeo;
+module.exports.findOne = findOne;
 module.exports.create = create;
 module.exports.update = update;
 module.exports.remove = remove;

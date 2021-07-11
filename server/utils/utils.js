@@ -4,14 +4,11 @@
 
 const http = require("http");
 const assert = require("assert");
-const mysql = require("mysql");
-const mongoClient = require("mongodb").MongoClient;
 const appSettings = require("../config/app-settings");
 const logging = require("../utils/logging");
 const logger = logging.getLogger("app::utils");
 
 /**
- * Write the response from the server.
  *
  * @param {IncomingMessage} response - the response object from the HTTP request callback
  * @param {ServerResponse} responseMessage - the message to write as a simple string
@@ -74,56 +71,12 @@ function transformChunkIntoLines(chunk) {
  * @param {Object} expected - the expected value
  */
 function assertEqual(actual, expected) {
-    assert.equal(
+    assert.strictEqual(
         actual,
         expected,
         `Assert failed: actual => ${actual}, expected => ${expected}`
     );
 }
-
-var db;
-
-function getDatabase() {
-    if (typeof db === "undefined") {
-        // switch here if other db are supported
-        if (appSettings.backingdb == "mysql") {
-            db = mysqldb_init();
-        } else if (appSettings.backingdb == "mongo") {
-            db = mongodb_init();
-        }
-    }
-    return db;
-}
-/**
- * Initializes the module:
- * - DB connection. An on(exit) handler is registered to close the DB connection
- * when Node terminates.
- */
-function mysqldb_init() {
-    var connection = mysql.createConnection({
-        host: "127.0.0.1",
-        user: appSettings.mysqlusr,
-        password: appSettings.mysqlpwd,
-        database: appSettings.mysqldbname,
-    });
-
-    connection.connect(function (err) {
-        if (err) {
-            logger.error("[mysqldb_init] error connecting: " + err.stack);
-            return;
-        }
-        logger.info("connected to mysql server");
-        process.on("exit", (code) => {
-            logger.info(
-                `closing connection to mysql server, exit code ${code}`
-            );
-            connection.end();
-        });
-    });
-    return connection;
-}
-
-function mongodb_init() {}
 
 /**
  * Helper function:
@@ -182,24 +135,9 @@ function httpRequest(requestMethod, requestPath, postData, resultsCallback) {
     }
 }
 
-function queryPromise(sql, values) {
-    return new Promise((resolve, reject) => {
-        db.query(sql, values, (error, results, fields) => {
-            if (error) {
-                logger.error(error);
-                reject(error);
-            } else {
-                resolve(results);
-            }
-        });
-    });
-}
-
 // What's exported
 module.exports.writeServerResponse = writeServerResponse;
 module.exports.writeServerJsonResponse = writeServerJsonResponse;
 module.exports.transformChunkIntoLines = transformChunkIntoLines;
-module.exports.queryPromise = queryPromise;
-module.exports.getDatabase = getDatabase;
 module.exports.assertEqual = assertEqual;
 module.exports.httpRequest = httpRequest;

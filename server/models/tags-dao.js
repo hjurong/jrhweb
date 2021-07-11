@@ -1,4 +1,6 @@
-'use strict';
+"use strict";
+
+const appSettings = require("../config/app-settings");
 
 /**
  * This is the DAO interface for tags.
@@ -6,16 +8,15 @@
  * function in the interface. The implementation can be switched
  * appropriately
  */
+const tagsDaoImpl = require(`./tags-dao-${appSettings.backingdb}`);
 
-const tagsDaoImpl = require('./tags-dao-mysql');
-
-function fetch(params) {
-    return tagsDaoImpl.fetch(params);
+function findMany(params) {
+    return tagsDaoImpl.findMany(params);
 }
 
-function read(id) {
-    return tagsDaoImpl.read(id);
+function findOne(id) {
+    return tagsDaoImpl.findOne(id);
 }
 
-module.exports.fetch = fetch;
-module.exports.read = read;
+module.exports.findMany = findMany;
+module.exports.findOne = findOne;
