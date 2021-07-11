@@ -20,15 +20,14 @@ const logger = logging.getLogger("app::controller::rest::posts");
 
 /**
  *
- * Fetches all shopping posts and redirects to the
- * posts-all page
+ * findMany using dao
  *
  * @param {Request} req - the Request object
  * @param {Response} res - the Response object
  * @param {Object} next - the next middleware function in the req/res cycle
  */
-function fetch(req, res, next) {
-    logger.debug("fetch()");
+function findMany(req, res, next) {
+    logger.debug("findMany()");
     var err = validationResult(req);
     if (!err.isEmpty()) {
         logger.error(err.mapped());
@@ -36,7 +35,7 @@ function fetch(req, res, next) {
         return;
     }
     postsDao
-        .fetch(req.query)
+        .findMany(req.query)
         .then((result) => {
             utils.writeServerJsonResponse(res, result.data, result.statusCode);
         })
@@ -46,10 +45,10 @@ function fetch(req, res, next) {
         });
 }
 
-function fetchgeo(req, res, next) {
-    logger.info("fetchgeo", req.query, postsDao.fetchgeo);
+function findManyGeo(req, res, next) {
+    logger.info("findManyGeo", req.query, postsDao.findManyGeo);
     postsDao
-        .fetchgeo(req.query)
+        .findManyGeo(req.query)
         .then((result) => {
             utils.writeServerJsonResponse(res, result.data, result.statusCode);
         })
@@ -93,7 +92,7 @@ function create(req, res, next) {
         return;
     }
     var err = validationResult(req);
-    if (!err.isEmpty()) {
+    if (!err.isEmpty() && false) {
         logger.error(err.mapped());
         utils.writeServerJsonResponse(res, { err: err.mapped() }, 400);
         return;
@@ -137,18 +136,18 @@ function create(req, res, next) {
 }
 
 /**
- * Fetches the specified post and all of its items
+ * findManyes the specified post and all of its items
  * and returns it to the caller.
  *
  * @param {Request} req - the Request object
  * @param {Response} res - the Response object
  * @param {Object} next - the next middleware function in the req/res cycle
  */
-function read(req, res, next) {
-    logger.debug("read()");
+function findOne(req, res, next) {
+    logger.debug("findOne()");
     let postId = req.params.postId;
     postsDao
-        .read(postId)
+        .findOne(postId)
         .then((result) => {
             utils.writeServerJsonResponse(res, result.data, result.statusCode);
         })
@@ -237,9 +236,9 @@ function remove(req, res, next) {
         });
 }
 
-module.exports.fetch = fetch;
-module.exports.fetchgeo = fetchgeo;
+module.exports.findMany = findMany;
+module.exports.findManyGeo = findManyGeo;
 module.exports.create = create;
-module.exports.read = read;
+module.exports.findOne = findOne;
 module.exports.update = update;
 module.exports.remove = remove;
