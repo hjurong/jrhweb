@@ -27,7 +27,7 @@
     "npm"
   ],
   "dependencies": {
-    "ajv": "^6.10.2",
+    "ajv": "^6.12.3",
     "async": "^2.6.1",
     "compression": "^1.7.4",
     "cookie-parser": "~1.4.3",
