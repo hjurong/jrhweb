@@ -35,7 +35,7 @@
     "dateformat": "^3.0.3",
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
-    "express": "~4.16.0",
+    "express": "~4.17.3",
     "express-validator": "^5.3.1",
     "geojson": "^0.5.0",
     "http-errors": "~1.6.2",
